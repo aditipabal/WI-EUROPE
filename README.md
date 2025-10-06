@@ -1,1 +1,2 @@
-[web]https://aditipabal.github.io/WI-EUROPE/
+[web]
+https://aditipabal.github.io/WI-EUROPE/
