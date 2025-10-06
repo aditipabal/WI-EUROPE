@@ -2,42 +2,73 @@
 title: "R CODES FOR DASHBOARD"
 ---
 
-
 Start fresh
+
 ```{r}
-rm(list = ls())
+library(jsonlite)
+library(dplyr)
+library(sf)
+library(leaflet)
+library(tmap)
+library(flexdashboard)
+library(geojsonio)
 ```
 
 Paste links from GitHub here:
+
 ```{r}
 # paste inside the quotations
 
-gpklink=''
-jsonlink=''
+
+jsonlink='https://raw.githubusercontent.com/aditipabal/worldindicator-europe/refs/heads/main/worldindicators.json'
 ```
 
 Have the maps into R
-```{r}
-library(sf)
 
-map1=read_sf(gpklink, layer = "usa")
-map2=read_sf(jsonlink)
+```{r}
+world_sf <- geojson_read(jsonlink, what = "sp") %>% st_as_sf()
+world_sf <- world_sf %>% rename_with(~ gsub("properties\\.", "", .x))
+
+# Filter Europe
+europe_sf <- world_sf %>% filter(region == "EUROPE")
 ```
 
 See and save plots:
 
 ```{r}
-library(ggplot2)
-map1gg=ggplot() + theme_bw() + geom_sf(data = map1,fill='red', color='grey90')
-map1gg
+tmap_mode("view")
+choropleth_map <- tm_shape(europe_sf) +
+  tm_polygons("mobiles",
+              style = "quantile",
+              palette = "Blues",
+              title = "Mobile Subscribers") +
+  tm_layout(title = "Choropleth Map - Europe")
 
-saveRDS(map1gg,file='map1.rds')
+choropleth_map
+
 ```
 
 ```{r}
-map2gg=ggplot() + theme_void() + geom_sf(data = map2)
-map2gg
-saveRDS(map2gg,file='map2.rds')
+dot_map <- tm_shape(europe_sf) +
+  tm_dots("mobiles",
+          scale = 0.1,
+          col = "blue",
+          size = "mobiles",
+          title = "Mobile Subscribers") +
+  tm_layout(title = "Dot Density Map - Europe")
+
+dot_map
+
 ```
 
-You are done!
+```{r}
+prop_map <- tm_shape(europe_sf) +
+  tm_bubbles(size = "mobiles",
+             col = "red",
+             alpha = 0.5,
+             border.col = "black",
+             title.size = "Mobiles") +
+  tm_layout(title = "Proportional Symbols Map - Europe")
+
+prop_map
+```
